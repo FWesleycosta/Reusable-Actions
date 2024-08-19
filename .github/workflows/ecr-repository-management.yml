@@ -1,0 +1,79 @@
+name: "ECR Repository Management"
+
+on:
+  workflow_call:
+    secrets:
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_REGION:
+        required: true
+      ECR_REPOSITORY:
+        required: true
+      WORKING_DIRECTORY:
+        required: true
+      DEPLOY_KEY:
+        required: true
+      TF_BACKEND_KEY:
+        required: true
+        description: "Terraform Backend Key"
+      TF_BACKEND_REGION:
+        required: true
+        description: "Terraform Backend Region"
+      TF_BACKEND_BUCKET:
+        required: true
+        description: "Terraform Backend Bucket"
+
+jobs:
+  ecr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.7.5
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup SSH for Deploy
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Initialize Terraform
+        run: |
+          terraform init -upgrade -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}" -backend-config="key=${{ secrets.TF_BACKEND_KEY }}" -backend-config="region=${{ secrets.TF_BACKEND_REGION }}"
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Plan Terraform for ECR
+        env:
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          TARGET_MODULE="module.${{ env.ECR_REPOSITORY }}.module.aws_ecr_repository.aws_ecr_repository.this[0]"
+          terraform plan -target=$TARGET_MODULE
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Apply Terraform for ECR
+        env:
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+        run: |
+          TARGET_MODULE="module.${{ env.ECR_REPOSITORY }}.module.aws_ecr_repository.aws_ecr_repository.this[0]"
+          terraform apply -target=$TARGET_MODULE -auto-approve
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}

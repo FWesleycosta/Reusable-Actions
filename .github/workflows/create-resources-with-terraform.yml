@@ -1,0 +1,90 @@
+name: 'Terraform Resources Deploy'
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+        description: "Environment to deploy"
+    secrets:
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+        description: "AWS Secret Access Key"
+      AWS_ACCESS_KEY_ID:
+        required: true
+        description: "AWS Access Key ID"
+      AWS_REGION:
+        required: true
+        description: "AWS Region"
+      DEPLOY_KEY:
+        required: true
+        description: "SSH Key for Deploy"
+      WORKING_DIRECTORY:
+        required: true
+        description: "Working Directory"
+      TF_BACKEND_KEY:
+        required: true
+        description: "Terraform Backend Key"
+      TF_BACKEND_REGION:
+        required: true
+        description: "Terraform Backend Region"
+      TF_BACKEND_BUCKET:
+        required: true
+        description: "Terraform Backend Bucket"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup SSH for Deploy
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      - name: Initialize Terraform for Deploy
+        env:
+          TF_VAR_workspace_environment: ${{ inputs.environment }}
+        run: |
+          terraform init -upgrade -backend-config="bucket=${{ secrets.TF_BACKEND_BUCKET }}" -backend-config="key=${{ secrets.TF_BACKEND_KEY }}" -backend-config="region=${{ secrets.TF_BACKEND_REGION }}"
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Terraform Refresh for Deploy
+        env:
+          TF_VAR_workspace_environment: ${{ inputs.environment }}
+        run: |
+          terraform refresh -var="workspace_environment=${{ inputs.environment }}"
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Terraform Plan for Deploy
+        env:
+          TF_VAR_workspace_environment: ${{ inputs.environment }}
+        run: |
+          terraform plan -var="workspace_environment=${{ inputs.environment }}" -out=tfplan-${{ inputs.environment }}
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Terraform Validate for Deploy
+        run: terraform validate
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
+
+      - name: Terraform Apply for Deploy
+        run: terraform apply -auto-approve tfplan-${{ inputs.environment }}
+        working-directory: ${{ secrets.WORKING_DIRECTORY }}
