@@ -12,9 +12,6 @@ on:
       sonarqube_project_key:
         description: 'Sonarqube project key'
         required: true
-      sonarqube_organization:
-        description: 'Sonarqube organization'
-        required: true
 
 jobs:
   sonar-scan:
