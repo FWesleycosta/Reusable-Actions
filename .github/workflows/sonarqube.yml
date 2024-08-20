@@ -9,9 +9,7 @@ on:
       SONAR_HOST_URL:
         description: 'Sonarqube URL'
         required: true
-      SONAR_ORGANIZATION:
-        description: 'Sonarqube project key'
-        required: true
+
 
 jobs:
   sonar-scan:
@@ -28,8 +26,7 @@ jobs:
 
       - name: Initial Sonar Scanner
         uses: sonarsource/sonarqube-scan-action@master
-        with:
+        env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-          SONAR_ORGANIZATION: ${{ secrets.SONAR_ORGANIZATION }}
 
