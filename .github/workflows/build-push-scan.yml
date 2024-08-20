@@ -5,12 +5,16 @@ on:
     secrets:
       AWS_SECRET_ACCESS_KEY:
         required: true
+        description: 'AWS Secret Access Key'
       AWS_ACCESS_KEY_ID:
         required: true
+        description: 'AWS Access Key ID'
       AWS_REGION:
         required: true
+        description: 'AWS Region'
       ECR_REPOSITORY:
         required: true
+        description: 'ECR Repository Name'
 
 jobs:
   build-push:

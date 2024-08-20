@@ -18,7 +18,7 @@ This workflow is responsible for building, pushing, and scanning a Docker image.
 
 ### ECR Repository Management
 
-File: `ecr-repository-management.yml`
+File: `create-repository-elastic-container-registry.yml`
 
 This workflow manages ECR repositories using Terraform. It initializes Terraform, configures AWS credentials, plans, and applies changes to the ECR repository.
 
@@ -48,15 +48,15 @@ To use the workflows, add the following code to your main workflow:
 jobs:
   build-push-scan:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/build-push-scan.yml@v1.0.0
-    with:
+    secrets:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
 
-  ecr-repository-management:
+  create-repository-elastic-container-registry:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/ecr-repository-management.yml@v1.0.0
-    with:
+    secrets:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -70,28 +70,30 @@ jobs:
   terraform-deploy:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/terraform-deploy.yml@v1.0.0
     with:
-      TF_BACKEND_BUCKET: ${{ secrets.TF_BACKEND_BUCKET }}
-      environment: ${{ secrets.ENVIRONMENT }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      environment: 'Development' <- Change to 'Production' for production
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID_PRD }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY_PRD }}
       ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
       DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
       WORKING_DIRECTORY: ${{ secrets.WORKING_DIRECTORY }}
       TF_BACKEND_KEY: ${{ secrets.TF_BACKEND_KEY }}
       TF_BACKEND_REGION: ${{ secrets.TF_BACKEND_REGION }}
-      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+      TF_BACKEND_BUCKET: ${{ secrets.PROD_TF_BACKEND_BUCKET }}
+      SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_TERRAFORM }}
 
   trivy-scan:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/trivy.yml@v1.0.0
-    with:
+    secrets:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
 
   sonarqube-scan:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/sonarqube.yml@v1.0.0
-    with:
-      SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
-      SONARQUBE_URL: ${{ secrets.SONARQUBE_URL }}
+    secrets:
+      sonarqube_token: ${{ secrets.SONARQUBE_TOKEN }}
+      sonarqube_url: ${{ secrets.SONARQUBE_URL }}
+      sonarqube_project_key: ${{ secrets.SONARQUBE_PROJECT_KEY }}
 
