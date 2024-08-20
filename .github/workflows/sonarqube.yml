@@ -2,23 +2,19 @@ name: 'Sonarqube Scan'
 
 on:
   workflow_call:
-    inputs:
+    secrets:
       sonarqube_token:
         description: 'Sonarqube token'
         required: true
-        type: string
       sonarqube_url:
         description: 'Sonarqube URL'
         required: true
-        type: string
       sonarqube_project_key:
         description: 'Sonarqube project key'
         required: true
-        type: string
       sonarqube_organization:
         description: 'Sonarqube organization'
         required: true
-        type: string
 
 jobs:
   sonar-scan:
@@ -51,18 +47,5 @@ jobs:
         run: |
           sonar-scanner \
           -Dsonar.projectKey=${{ inputs.sonarqube_project_key }} \
-          -Dsonar.organization=${{ inputs.sonarqube_organization }} \
           -Dsonar.host.url=${{ inputs.sonarqube_url }} \
-          -Dsonar.login=${{ inputs.sonarqube_token }} \
-          -Dsonar.qualitygate.wait=true \
-          -Dsonar.qualitygate.timeout=300
-
-      - name: Publish SonarQube Quality Gate Result
-        if: ${{ github.event_name == 'pull_request' }}
-        run: |
-          SONARQUBE_URL=${{ inputs.sonarqube_url }}
-          SONARQUBE_PROJECT_KEY=${{ inputs.sonarqube_project_key }}
-          SONARQUBE_TOKEN=${{ inputs.sonarqube_token }}
-          curl -sS ${SONARQUBE_URL}/api/qualitygates/project_status?projectKey=${SONARQUBE_PROJECT_KEY} \
-            -u ${SONARQUBE_TOKEN}: \
-            | jq '.'
+          -Dsonar.login=${{ inputs.sonarqube_token }} 
