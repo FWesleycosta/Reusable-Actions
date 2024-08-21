@@ -1,0 +1,133 @@
+name: Create Pull Request
+
+on:
+  workflow_call:
+    inputs:
+      destination-branch:
+        description: 'The branch base to be merged into'
+        required: false
+        default: staging
+        type: string
+      hotfix-destination-branch:
+        description: 'The branch base to be merged into from a hotfix'
+        required: false
+        default: main
+        type: string
+
+jobs:
+  lint-branch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get branch values
+        id: get-branch
+        run: |
+          split=(${GITHUB_REF_NAME//\// })
+          indexprefix=$((${#split[@]}-2))
+          indexjira=$((${#split[@]}-1))
+          PREFIX_TAG=${split[$indexprefix]}
+          JIRA_LABEL=${split[$indexjira]}
+
+          # Valida se o nome da branch segue o padrão esperado
+          if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
+            echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
+            exit 1
+          fi
+
+          TARGET=${{ inputs.destination-branch }}
+          IS_VALID_BRANCH=false
+          TITLEHF=""
+          
+          if [[ ${PREFIX_TAG} == 'upgrade' ]]; then
+              PREFIX_LABEL=upgrade
+              IS_VALID_BRANCH=true
+          elif [[ ${PREFIX_TAG} == 'feature' ]]; then
+              PREFIX_LABEL=feature
+              IS_VALID_BRANCH=true
+          elif [[ ${PREFIX_TAG} == 'bugfix' ]]; then
+              PREFIX_LABEL=bug
+              IS_VALID_BRANCH=true
+          elif [[ ${PREFIX_TAG} == 'hotfix' ]]; then
+              PREFIX_LABEL=hotfix
+              IS_VALID_BRANCH=true
+              TITLEHF='[Release] '
+              TARGET=${{ inputs.hotfix-destination-branch }}
+          fi
+          
+          if [[ $IS_VALID_BRANCH == 'false' ]]; then
+            echo 'Branch inválida! Utilize um dos labels ao criar [feature|bugfix|upgrade|hotfix]'
+            exit 1
+          fi
+
+          echo "output-label=$PREFIX_LABEL" >> $GITHUB_OUTPUT 
+          echo "output-jira-label=$JIRA_LABEL" >> $GITHUB_OUTPUT 
+          echo "output-target=$TARGET" >> $GITHUB_OUTPUT 
+          echo "output-title-hotfix=$TITLEHF" >> $GITHUB_OUTPUT
+
+  lint-commits:
+    runs-on: ubuntu-latest
+    needs: lint-branch
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run Commitlint
+        run: npx commitlint --from=origin/${{ steps.get-branch.outputs.output-target }} --to=HEAD
+
+  create-initial-pr:
+    runs-on: ubuntu-latest
+    needs: [lint-branch, lint-commits]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Create draft PR
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ github.token }}
+          source_branch: ${{ github.ref_name }}
+          destination_branch: ${{ steps.get-branch.outputs.output-target }}
+          pr_title: "[${{ steps.get-branch.outputs.output-jira-label }}] ${PREFIX_LABEL}: ${DESCRIPTION}"
+          pr_body: |
+            ## Type of change
+
+            - [ ] Bug fix (non-breaking change which fixes an issue)
+            - [ ] New feature (non-breaking change which adds functionality)
+            - [ ] Chore (documentation, packages, or tests updates, nothing that affect the final user directly)
+            - [ ] Release (new version of the application - only for production)
+
+            ## Description
+
+            ...
+
+            ## Screenshots
+
+            ...
+
+            ## Tasks
+
+            - [task-id](task-link) or N/A
+
+            ## Checklist
+
+            - [ ] My changes have less than or equal 400 lines
+            - [ ] I have performed a self-review of my own code
+            - [ ] The existing tests and linter pass locally with my changes
+            - [ ] I have commented my code in hard-to-understand areas (if applicable)
+            - [ ] I have created tests for my fix or feature (if applicable)
+
+            ## Dependencies
+
+            This pull request has a dependency on the following others:
+
+            - link-to-depency PR or N/A
+          pr_assignee: ${{ github.event.sender.login }}
+          pr_label: ${{ steps.get-branch.outputs.output-label }}
+          pr_allow_empty: false
+          pr_draft: true
