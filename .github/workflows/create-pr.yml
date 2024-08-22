@@ -46,7 +46,7 @@ jobs:
           echo "target=$TARGET" >> $GITHUB_ENV
           echo "title-hotfix=$TITLEHF" >> $GITHUB_ENV
 
-  create-initial-pr:
+  check-differences:
     runs-on: ubuntu-latest
     needs: lint-branch
     steps:
@@ -55,15 +55,34 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create PR
-        if: ${{ inputs.destination-branch != github.ref_name }}
-        uses: repo-sync/pull-request@v2
+      - name: Verificar diferenças entre branches
+        run: |
+          git fetch origin ${{ inputs.destination-branch }}:refs/remotes/origin/${{ inputs.destination-branch }}
+          git log --oneline origin/${{ inputs.destination-branch }}..${{ github.ref_name }}
+
+      - name: Debugging branches state
+        run: |
+          echo "Branch atual: $GITHUB_REF_NAME"
+          echo "Branch destino: ${{ inputs.destination-branch }}"
+          echo "Verificando se há diferenças para criar o PR..."
+
+  create-initial-pr:
+    runs-on: ubuntu-latest
+    needs: check-differences
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          github_token: ${{ github.token }}
-          source_branch : ${{ github.ref_name }}
-          destination_branch: ${{ inputs.destination-branch }}
-          pr_title: "Pull Request - ${{ github.ref_name }}"
-          pr_body: |
+          fetch-depth: 0
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+          base: ${{ inputs.destination-branch }}
+          title: "Pull Request - ${{ github.ref_name }}"
+          body: |
             ## Type of change
 
             - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -98,3 +117,4 @@ jobs:
             - link-to-dependency PR or N/A
           labels: enhancement
           assignees: ${{ github.event.sender.login }}
+          always-create-pr: true
