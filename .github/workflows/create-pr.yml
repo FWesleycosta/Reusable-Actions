@@ -57,14 +57,13 @@ jobs:
 
       - name: Create PR
         if: ${{ inputs.destination-branch != github.ref_name }}
-        uses: peter-evans/create-pull-request@v5
+        uses: repo-sync/pull-request@v2
         with:
-          token: ${{ github.token }}
-          commit-message: ${{ github.commit_message }}
-          branch: ${{ github.ref_name }}
-          base: ${{ inputs.destination-branch }}
-          title: "Pull Request - ${{ github.ref_name }}"
-          body: |
+          github_token: ${{ github.token }}
+          source_branch : ${{ github.ref_name }}
+          destination_branch: ${{ inputs.destination-branch }}
+          pr_title: "Pull Request - ${{ github.ref_name }}"
+          pr_body: |
             ## Type of change
 
             - [ ] Bug fix (non-breaking change which fixes an issue)
