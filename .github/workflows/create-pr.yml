@@ -38,7 +38,6 @@ jobs:
 
           # Define o destino com base no input
           TARGET="${{ inputs.destination-branch }}"
-          echo "Branch de destino: $TARGET"
           IS_VALID_BRANCH=true
           TITLEHF=""
 
@@ -56,19 +55,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug Branches
-        run: |
-          echo "Branch de origem: ${{ github.ref_name }}"
-          echo "Branch de destino: ${{ env.target }}"
-
       - name: Create PR
-        if: ${{ env.target != github.ref_name }} # Garante que a branch de origem e destino são diferentes
+        if: ${{ inputs.destination-branch != github.ref_name }}
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Descrição da mudança"
-          branch: ${{ github.ref_name }} # Branch de origem
-          base: ${{ env.target }}
+          token: ${{ github.token }}
+          commit-message: ${{ github.commit_message }}
+          branch: ${{ github.ref_name }}
+          base: ${{ inputs.destination-branch }}"
           title: "Pull Request - ${{ github.ref_name }}"
           body: |
             ## Type of change
