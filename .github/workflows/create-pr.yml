@@ -62,7 +62,7 @@ jobs:
           token: ${{ github.token }}
           commit-message: ${{ github.commit_message }}
           branch: ${{ github.ref_name }}
-          base: ${{ inputs.destination-branch }}"
+          base: ${{ inputs.destination-branch }}
           title: "Pull Request - ${{ github.ref_name }}"
           body: |
             ## Type of change
