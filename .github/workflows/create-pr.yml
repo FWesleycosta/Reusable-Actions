@@ -55,14 +55,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Debug Branches
+        run: |
+          echo "Branch de origem: ${{ github.ref_name }}"
+          echo "Branch de destino: ${{ env.target }}"
+
       - name: Create PR
+        if: ${{ env.target != github.ref_name }} # Garante que a branch de origem e destino são diferentes
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ github.token }}
-          commit-message: ${{ github.event.head_commit.message }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Descrição da mudança"
           branch: ${{ github.ref_name }} # Branch de origem
-          base: ${{ env.target }} # Branch de destino
-          title: "Pull Request - ${{ github.ref_name }}" # Título do PR
+          base: ${{ env.target }} # Branch de destino (certifique-se de que não seja igual à origem)
+          title: "Pull Request - ${{ github.ref_name }}"
           body: |
             ## Type of change
 
