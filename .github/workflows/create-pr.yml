@@ -8,11 +8,6 @@ on:
         required: false
         default: main
         type: string
-      hotfix-destination-branch:
-        description: 'The branch base to be merged into from a hotfix'
-        required: false
-        default: main
-        type: string
 
 jobs:
   lint-branch:
@@ -63,9 +58,10 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
+        if: ${{ steps.check-differences.outputs.diff-count != 0 }}
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref_name }}
           base: ${{ inputs.destination-branch }}
           title: "Pull Request - ${{ github.ref_name }}"
