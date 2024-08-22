@@ -58,7 +58,6 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
-        if: ${{ env.diff-count != '0' }}
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ github.token }}
