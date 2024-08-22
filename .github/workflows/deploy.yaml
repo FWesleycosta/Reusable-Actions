@@ -1,0 +1,20 @@
+name: 'Create Pull Request'
+
+on:
+  push:
+    branches:
+      - 'DEVOPS-*/**'
+      - 'DEV-*/**'
+      - 'DevOps-*/**'
+
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+jobs:
+  create-pull-request:
+    uses: ./github/workflows/create-pull-request.yml
+    with:
+      destination-branch: 'main'

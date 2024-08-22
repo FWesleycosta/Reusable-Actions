@@ -5,8 +5,8 @@ on:
     inputs:
       destination-branch:
         description: 'The branch base to be merged into'
-        required: false
-        default: main
+        required: true
+        default: staging
         type: string
 
 jobs:
@@ -21,12 +21,11 @@ jobs:
       - name: Get branch values
         id: get-branch
         run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+/[a-z]+\\\([a-z0-9-]+\\\):[a-z0-9-]+$ ]]; then
-            echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<tipo>(<escopo>):<super-resumo-da-feature>, por exemplo: TL-100/feat(posts):create-post-api"
+          if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
+            echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
             exit 1
           fi
           echo "target=${{ inputs.destination-branch }}" >> $GITHUB_ENV
-
 
   create-initial-pr:
     runs-on: ubuntu-latest

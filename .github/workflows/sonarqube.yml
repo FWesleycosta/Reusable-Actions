@@ -10,7 +10,6 @@ on:
         description: 'Sonarqube URL'
         required: true
 
-
 jobs:
   sonar-scan:
     runs-on: self-hosted
@@ -29,4 +28,17 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        with:
+          args: >
+            -Dsonar.branch.name=${{ github.ref_name }}
 
+      - name: Quality Gate
+        id: sonar-quality-gate
+        uses: sonarsource/sonarqube-quality-gate-action@master
+        timeout-minutes: 5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+      - name: Quality Gate Status
+        run: echo "Quality Gate Status is ${{ steps.sonar-quality-gate.outputs.quality-gate-status }}"

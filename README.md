@@ -40,6 +40,12 @@ File: `sonarqube.yml`
 
 This workflow scans code quality using SonarQube. It configures the SonarQube scanner, runs the scan, and sends the results to SonarQube.
 
+### Create Pull Request
+
+File: `create-pull-request.yml`
+
+This workflow creates a pull request using the GitHub API. It configures the pull request title, body, and branch name.
+
 ## Usage
 
 To use the workflows, add the following code to your main workflow:
@@ -93,7 +99,14 @@ jobs:
   sonarqube-scan:
     uses: FWesleycosta/Reusable-Actions/.github/workflows/sonarqube.yml@v1.0.0
     secrets:
-      sonarqube_token: ${{ secrets.SONARQUBE_TOKEN }}
-      sonarqube_url: ${{ secrets.SONARQUBE_URL }}
-      sonarqube_project_key: ${{ secrets.SONARQUBE_PROJECT_KEY }}
+      SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+      SONAR_HOST_URL: ${{ secrets.SONARQUBE_URL }}
+
+  create-pull-request:
+    uses: FWesleycosta/Reusable-Actions/.github/workflows/create-pull-request.yml@v1.0.0
+    secrets:
+      with:
+        destination_branch: 'main'
+
+
 
