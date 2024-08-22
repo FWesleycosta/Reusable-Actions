@@ -46,9 +46,9 @@ jobs:
           echo "description=$DESCRIPTION" >> $GITHUB_ENV
           echo "target=$TARGET" >> $GITHUB_ENV
           echo "title-hotfix=$TITLEHF" >> $GITHUB_ENV
-          
-         - name: Set outputs
-           run: echo "Valor de target após exportação: ${{ env.target }}"
+
+      - name: Set outputs
+        run: echo "Valor de target após exportação: ${{ env.target }}"
 
   create-initial-pr:
     runs-on: ubuntu-latest
