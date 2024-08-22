@@ -26,15 +26,13 @@ jobs:
       - name: Get branch values
         id: get-branch
         run: |
-          # Valida se o nome da branch segue o padrão esperado
           if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
             echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
             exit 1
           fi
-
           echo "target=${{ inputs.destination-branch }}" >> $GITHUB_ENV
 
-  create-initial-pr:
+  check-differences:
     runs-on: ubuntu-latest
     needs: lint-branch
     steps:
@@ -43,12 +41,26 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Fetch All Branches
+        run: git fetch --all
+
       - name: Verificar diferenças entre branches
         id: check-differences
         run: |
-          git fetch origin ${{ inputs.destination-branch }}:refs/remotes/origin/${{ inputs.destination-branch }}
           DIFF_COUNT=$(git rev-list --count origin/${{ inputs.destination-branch }}..${{ github.ref_name }})
           echo "diff-count=$DIFF_COUNT" >> $GITHUB_ENV
+
+      - name: Debug DIFF_COUNT
+        run: echo "DIFF_COUNT is ${{ env.diff-count }}"
+
+  create-initial-pr:
+    runs-on: ubuntu-latest
+    needs: check-differences
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Create PR
         if: ${{ steps.check-differences.outputs.diff-count != 0 }}
@@ -93,4 +105,3 @@ jobs:
             - link-to-dependency PR or N/A
           labels: enhancement
           assignees: ${{ github.event.sender.login }}
-          always-create-pr: true
