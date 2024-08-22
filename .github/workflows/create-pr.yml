@@ -38,6 +38,7 @@ jobs:
 
           # Define o destino com base no input
           TARGET="${{ inputs.destination-branch }}"
+          echo "Branch de destino: $TARGET"
           IS_VALID_BRANCH=true
           TITLEHF=""
 
@@ -45,6 +46,9 @@ jobs:
           echo "description=$DESCRIPTION" >> $GITHUB_ENV
           echo "target=$TARGET" >> $GITHUB_ENV
           echo "title-hotfix=$TITLEHF" >> $GITHUB_ENV
+          
+         - name: Set outputs
+           run: echo "Valor de target após exportação: ${{ env.target }}"
 
   create-initial-pr:
     runs-on: ubuntu-latest
@@ -67,7 +71,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Descrição da mudança"
           branch: ${{ github.ref_name }} # Branch de origem
-          base: ${{ env.target }} # Branch de destino (certifique-se de que não seja igual à origem)
+          base: ${{ env.target }}
           title: "Pull Request - ${{ github.ref_name }}"
           body: |
             ## Type of change
