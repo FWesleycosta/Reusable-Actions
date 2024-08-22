@@ -59,7 +59,7 @@ jobs:
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ github.token }}
-          source_branch: ${{ github.ref_name }}
+          source_branch: ${{ github.head_ref }}
           destination_branch: ${{ env.target }}
           pr_title: ${{ github.ref_name }}
           pr_body: |
