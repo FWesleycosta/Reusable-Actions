@@ -36,7 +36,7 @@ jobs:
             exit 1
           fi
 
-          # Valida se o nome da branch segue o padrão esperado
+          # Define o destino com base no input
           TARGET="${{ inputs.destination-branch }}"
           IS_VALID_BRANCH=true
           TITLEHF=""
@@ -56,13 +56,14 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
-        uses: repo-sync/pull-request@v2
+        uses: peter-evans/create-pull-request@v5
         with:
-          github_token: ${{ github.token }}
-          source_branch: ${{ github.head_ref }}
-          destination_branch: ${{ env.target }}
-          pr_title: ${{ github.ref_name }}
-          pr_body: |
+          token: ${{ github.token }}
+          commit-message: ${{ github.event.head_commit.message }}
+          branch: ${{ github.ref_name }} # Branch de origem
+          base: ${{ env.target }} # Branch de destino
+          title: "Pull Request - ${{ github.ref_name }}" # Título do PR
+          body: |
             ## Type of change
 
             - [ ] Bug fix (non-breaking change which fixes an issue)
@@ -94,7 +95,6 @@ jobs:
 
             This pull request has a dependency on the following others:
 
-            - link-to-depency PR or N/A
-          pr_assignee: ${{ github.event.sender.login }}
-          pr_label: enhancement
-          pr_allow_empty: false
+            - link-to-dependency PR or N/A
+          labels: enhancement
+          assignees: ${{ github.event.sender.login }}
