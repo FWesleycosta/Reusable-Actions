@@ -58,10 +58,10 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
-        if: ${{ steps.check-differences.outputs.diff-count != 0 }}
+        if: ${{ env.diff-count != '0' }}
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
           branch: ${{ github.ref_name }}
           base: ${{ inputs.destination-branch }}
           title: "Pull Request - ${{ github.ref_name }}"
@@ -100,3 +100,4 @@ jobs:
             - link-to-dependency PR or N/A
           labels: enhancement
           assignees: ${{ github.event.sender.login }}
+          always-create-pr: true
