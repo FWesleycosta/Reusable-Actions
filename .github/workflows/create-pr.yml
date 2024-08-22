@@ -38,14 +38,14 @@ jobs:
             exit 1
           fi
 
-          TARGET=${{ inputs.destination-branch }}
+          TARGET="${{ inputs.destination-branch }}"
           IS_VALID_BRANCH=true
           TITLEHF=""
 
-          echo "output-jira-label=$JIRA_LABEL" >> $GITHUB_OUTPUT 
-          echo "output-target=$TARGET" >> $GITHUB_OUTPUT 
-          echo "output-title-hotfix=$TITLEHF" >> $GITHUB_OUTPUT 
-          echo "output-description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          echo "jira-label=$JIRA_LABEL" >> $GITHUB_ENV
+          echo "description=$DESCRIPTION" >> $GITHUB_ENV
+          echo "target=$TARGET" >> $GITHUB_ENV
+          echo "title-hotfix=$TITLEHF" >> $GITHUB_ENV
 
   create-initial-pr:
     runs-on: ubuntu-latest
@@ -56,13 +56,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Create draft PR
+      - name: Create PR
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ github.token }}
           source_branch: ${{ github.ref_name }}
-          destination_branch: ${{ steps.get-branch.outputs.output-target }}
-          pr_title: "[${{ steps.get-branch.outputs.output-jira-label }}] ${{ steps.get-branch.outputs.output-description }}"
+          destination_branch: ${{ env.target }}
+          pr_title: "[${{ env.jira-label }}] ${{ env.description }}"
           pr_body: |
             ## Type of change
 
