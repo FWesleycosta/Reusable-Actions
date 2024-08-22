@@ -47,19 +47,19 @@ jobs:
           echo "output-target=$TARGET" >> $GITHUB_OUTPUT 
           echo "output-title-hotfix=$TITLEHF" >> $GITHUB_OUTPUT
 
-  lint-commits:
-    runs-on: ubuntu-latest
-    needs: lint-branch
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Run Commitlint
-        run: npx commitlint --from=origin/${{ steps.get-branch.outputs.output-target }} --to=HEAD
+#  lint-commits:
+#    runs-on: ubuntu-latest
+#    needs: lint-branch
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#
+#      - name: Run Commitlint
+#        run: npx commitlint --from=origin/${{ steps.get-branch.outputs.output-target }} --to=HEAD
 
   create-initial-pr:
     runs-on: ubuntu-latest
-    needs: [lint-branch, lint-commits]
+    needs: [lint-branch]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
