@@ -41,27 +41,6 @@ jobs:
           TARGET=${{ inputs.destination-branch }}
           IS_VALID_BRANCH=false
           TITLEHF=""
-          
-          if [[ ${PREFIX_TAG} == 'upgrade' ]]; then
-              PREFIX_LABEL=upgrade
-              IS_VALID_BRANCH=true
-          elif [[ ${PREFIX_TAG} == 'feature' ]]; then
-              PREFIX_LABEL=feature
-              IS_VALID_BRANCH=true
-          elif [[ ${PREFIX_TAG} == 'bugfix' ]]; then
-              PREFIX_LABEL=bug
-              IS_VALID_BRANCH=true
-          elif [[ ${PREFIX_TAG} == 'hotfix' ]]; then
-              PREFIX_LABEL=hotfix
-              IS_VALID_BRANCH=true
-              TITLEHF='[Release] '
-              TARGET=${{ inputs.hotfix-destination-branch }}
-          fi
-          
-          if [[ $IS_VALID_BRANCH == 'false' ]]; then
-            echo 'Branch inválida! Utilize um dos labels ao criar [feature|bugfix|upgrade|hotfix]'
-            exit 1
-          fi
 
           echo "output-label=$PREFIX_LABEL" >> $GITHUB_OUTPUT 
           echo "output-jira-label=$JIRA_LABEL" >> $GITHUB_OUTPUT 
