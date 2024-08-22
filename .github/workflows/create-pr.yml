@@ -21,11 +21,12 @@ jobs:
       - name: Get branch values
         id: get-branch
         run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
-            echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
+          if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+/[a-z]+\\\([a-z0-9-]+\\\):[a-z0-9-]+$ ]]; then
+            echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<tipo>(<escopo>):<super-resumo-da-feature>, por exemplo: TL-100/feat(posts):create-post-api"
             exit 1
           fi
           echo "target=${{ inputs.destination-branch }}" >> $GITHUB_ENV
+
 
   create-initial-pr:
     runs-on: ubuntu-latest
@@ -40,10 +41,10 @@ jobs:
         if: ${{ inputs.destination-branch != github.ref_name }}
         uses: repo-sync/pull-request@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ github.token }}
           source_branch: ${{ github.ref_name }}
           destination_branch: ${{ inputs.destination-branch }}
-          pr_title: "Pull Request - ${{ github.ref_name }}"
+          pr_title: "${{ github.ref_name }}"
           pr_body: |
             ## Type of change
 
@@ -79,3 +80,5 @@ jobs:
             - link-to-dependency PR or N/A
           labels: enhancement
           assignees: ${{ github.event.sender.login }}
+
+
