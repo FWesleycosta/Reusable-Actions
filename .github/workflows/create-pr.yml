@@ -27,10 +27,10 @@ jobs:
         id: get-branch
         run: |
           split=(${GITHUB_REF_NAME//\// })
-          indexprefix=$((${#split[@]}-2))
-          indexjira=$((${#split[@]}-1))
-          PREFIX_TAG=${split[$indexprefix]}
+          indexjira=0
+          indexdescription=1
           JIRA_LABEL=${split[$indexjira]}
+          DESCRIPTION=${split[$indexdescription]}
 
           # Valida se o nome da branch segue o padrão esperado
           if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
@@ -39,27 +39,17 @@ jobs:
           fi
 
           TARGET=${{ inputs.destination-branch }}
-          IS_VALID_BRANCH=false
+          IS_VALID_BRANCH=true
           TITLEHF=""
 
-          echo "output-label=$PREFIX_LABEL" >> $GITHUB_OUTPUT 
           echo "output-jira-label=$JIRA_LABEL" >> $GITHUB_OUTPUT 
           echo "output-target=$TARGET" >> $GITHUB_OUTPUT 
-          echo "output-title-hotfix=$TITLEHF" >> $GITHUB_OUTPUT
-
-#  lint-commits:
-#    runs-on: ubuntu-latest
-#    needs: lint-branch
-#    steps:
-#      - name: Checkout
-#        uses: actions/checkout@v4
-#
-#      - name: Run Commitlint
-#        run: npx commitlint --from=origin/${{ steps.get-branch.outputs.output-target }} --to=HEAD
+          echo "output-title-hotfix=$TITLEHF" >> $GITHUB_OUTPUT 
+          echo "output-description=$DESCRIPTION" >> $GITHUB_OUTPUT
 
   create-initial-pr:
     runs-on: ubuntu-latest
-    needs: [lint-branch]
+    needs: lint-branch
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -72,7 +62,7 @@ jobs:
           github_token: ${{ github.token }}
           source_branch: ${{ github.ref_name }}
           destination_branch: ${{ steps.get-branch.outputs.output-target }}
-          pr_title: "[${{ steps.get-branch.outputs.output-jira-label }}] ${PREFIX_LABEL}: ${DESCRIPTION}"
+          pr_title: "[${{ steps.get-branch.outputs.output-jira-label }}] ${{ steps.get-branch.outputs.output-description }}"
           pr_body: |
             ## Type of change
 
@@ -107,5 +97,5 @@ jobs:
 
             - link-to-depency PR or N/A
           pr_assignee: ${{ github.event.sender.login }}
-          pr_label: ${{ steps.get-branch.outputs.output-label }}
+          pr_label: enhancement
           pr_allow_empty: false
