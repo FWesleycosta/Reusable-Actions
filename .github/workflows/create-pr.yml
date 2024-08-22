@@ -62,7 +62,7 @@ jobs:
           github_token: ${{ github.token }}
           source_branch: ${{ github.ref_name }}
           destination_branch: ${{ env.target }}
-          pr_title: "[${{ env.jira-label }}] ${{ env.description }}"
+          pr_title: ${{ github.ref_name }}
           pr_body: |
             ## Type of change
 
