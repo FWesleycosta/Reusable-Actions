@@ -1,0 +1,85 @@
+name: 'Build and Push'
+
+on:
+  workflow_call:
+    secrets:
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+        description: 'AWS Secret Access Key'
+      AWS_ACCESS_KEY_ID:
+        required: true
+        description: 'AWS Access Key ID'
+      AWS_REGION:
+        required: true
+        description: 'AWS Region'
+      ECR_REPOSITORY:
+        required: true
+        description: 'ECR Repository Name'
+
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Verify ECR Repository Exists
+        id: check-ecr
+        run: |
+          set +e
+          OUTPUT=$(aws ecr describe-repositories --repository-names ${{ secrets.ECR_REPOSITORY }} --region ${{ secrets.AWS_REGION }} 2>&1)
+          STATUS=$?
+          if [ "$STATUS" -eq 0 ]; then
+            echo "ECR_EXISTS=true" >> $GITHUB_ENV
+          else
+            echo "ECR_EXISTS=false" >> $GITHUB_ENV
+            echo "Please ensure the repository name is correct and your AWS credentials have sufficient permissions."
+          fi
+          echo "STATUS=$STATUS" >> $GITHUB_ENV
+          exit 0
+
+      - name: Login to Amazon ECR
+        if: env.ECR_EXISTS == 'true'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get Docker Tag
+        if: env.ECR_EXISTS == 'true'
+        shell: bash
+        run: echo "tag=${GITHUB_SHA:0:7}" >> $GITHUB_OUTPUT
+        id: tag
+
+      - name: Build, tag, and push image to Amazon ECR
+        if: env.ECR_EXISTS == 'true'
+        env:
+          IMAGE_TAG: ${{ steps.tag.outputs.tag }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -t ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+          docker push ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          echo "IMAGE_NAME=${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}" >> $GITHUB_ENV
+
+      - name: Save image name artifact
+        if: env.ECR_EXISTS == 'true'
+        run: echo ${{ env.IMAGE_NAME }} > image_name.txt
+
+      - name: Upload artifact
+        if: env.ECR_EXISTS == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: image-name
+          path: image_name.txt
