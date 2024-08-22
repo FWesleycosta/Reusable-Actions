@@ -6,7 +6,7 @@ on:
       destination-branch:
         description: 'The branch base to be merged into'
         required: false
-        default: staging
+        default: main
         type: string
       hotfix-destination-branch:
         description: 'The branch base to be merged into from a hotfix'
@@ -29,8 +29,6 @@ jobs:
           split=(${GITHUB_REF_NAME//\// })
           indexjira=0
           indexdescription=1
-          JIRA_LABEL=${split[$indexjira]}
-          DESCRIPTION=${split[$indexdescription]}
 
           # Valida se o nome da branch segue o padrão esperado
           if [[ ! $GITHUB_REF_NAME =~ ^[A-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
@@ -38,6 +36,7 @@ jobs:
             exit 1
           fi
 
+          # Valida se o nome da branch segue o padrão esperado
           TARGET="${{ inputs.destination-branch }}"
           IS_VALID_BRANCH=true
           TITLEHF=""
