@@ -109,4 +109,3 @@ jobs:
           pr_assignee: ${{ github.event.sender.login }}
           pr_label: ${{ steps.get-branch.outputs.output-label }}
           pr_allow_empty: false
-          pr_draft: true
