@@ -18,19 +18,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Debug branch name
-        run: |
-          echo "Branch name: $GITHUB_REF_NAME"
-
       - name: Get branch values
         id: get-branch
         run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^[a-zA-Z]+-[0-9]+\/[a-zA-Z0-9-]+$ ]]; then
+          BRANCH_NAME="${{ github.event.pull_request.head.ref || github.ref_name }}"
+          if [[ ! $BRANCH_NAME =~ ^[a-zA-Z]+-[0-9]+\/[a-zA-Z0-9-]+$ ]]; then
             echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
             exit 1
           fi
           echo "target=${{ inputs.destination-branch }}" >> $GITHUB_ENV
-
 
   create-initial-pr:
     runs-on: ubuntu-latest
