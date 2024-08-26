@@ -21,7 +21,8 @@ jobs:
       - name: Get branch values
         id: get-branch
         run: |
-          if [[ ! $GITHUB_REF_NAME =~ ^[a-zA-Z]+-[0-9]+\/[a-z0-9-]+$ ]]; then
+          BRANCH_NAME="${{ github.event.pull_request.head.ref || github.ref_name }}"
+          if [[ ! $BRANCH_NAME =~ ^[a-zA-Z]+-[0-9]+\/[a-zA-Z0-9-]+$ ]]; then
             echo "Branch inválida! O formato deve ser <id-da-sua-tarefa>/<super-resumo-da-feature>, por exemplo: TL-100/create-post-api"
             exit 1
           fi
@@ -37,13 +38,12 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
-        if: ${{ inputs.destination-branch != github.ref_name }}
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ github.token }}
-          source_branch: ${{ github.ref_name }}
+          source_branch: ${{ github.event.pull_request.head.ref }}
           destination_branch: ${{ inputs.destination-branch }}
-          pr_title: "${{ github.ref_name }}"
+          pr_title: "${{ github.event.pull_request.title }}"
           pr_body: |
             ## Type of change
 
