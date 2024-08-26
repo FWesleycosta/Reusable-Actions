@@ -38,7 +38,6 @@ jobs:
           fetch-depth: 0
 
       - name: Create PR
-        if: ${{ inputs.destination-branch != github.head_ref }}
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ github.token }}
