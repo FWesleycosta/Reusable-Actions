@@ -1,0 +1,15 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: reusable-actions
+  title: Reusable Actions
+  description: "Workflows reutilizáveis do GitHub Actions: build Docker, publicação no ECR, Terraform e varredura com Trivy."
+  tags:
+    - github-actions
+  annotations:
+    github.com/project-slug: FWesleycosta/Reusable-Actions
+spec:
+  type: library
+  lifecycle: production
+  owner: fwesleycosta
+  system: pipelines
